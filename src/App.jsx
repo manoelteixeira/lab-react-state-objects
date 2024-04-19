@@ -9,30 +9,75 @@ function App() {
   // States
   const [currentOrder, setCurrentOrder] = useState([]);
   const [pastOrder, setPastOrder] = useState([]);
+  const [tidy, setTidy] = useState(false);
 
   // Helper Functions
-  const addItem = (item) => {
-    setCurrentOrder([...currentOrder, item]);
+  const getCurrentOrderIDS = () => {
+    return [...new Set(currentOrder.map((item) => item.id))];
   };
 
-  const deleteItem = (idx) => {
-    const filteredOrder = currentOrder.filter(
-      (item, itemIDX) => itemIDX !== idx
-    );
-    setCurrentOrder([...filteredOrder]);
+  const addItem = (item) => {
+    if (!tidy || !getCurrentOrderIDS().includes(item.id)) {
+      const newItem = {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: 1,
+      };
+      setCurrentOrder([...currentOrder, newItem]);
+    } else {
+      const order = [...currentOrder];
+      order.map((i) => {
+        if (i.id == item.id) {
+          i.quantity++;
+        }
+      });
+      setCurrentOrder([...order]);
+    }
+  };
+
+  const deleteItem = (item) => {
+    const idx = currentOrder.indexOf(item);
+    if (!tidy || item.quantity == 1) {
+      const filteredOrder = currentOrder.filter(
+        (item, itemIDX) => itemIDX !== idx
+      );
+      setCurrentOrder([...filteredOrder]);
+    } else {
+      const order = [...currentOrder];
+      order[idx].quantity--;
+      setCurrentOrder([...order]);
+    }
   };
 
   const calculateTotal = () => {
-    const total = currentOrder.reduce((acc, cur) => acc + cur.price, 0);
+    const total = currentOrder.reduce(
+      (acc, cur) => acc + cur.quantity * cur.price,
+      0
+    );
     return total;
   };
 
   const tidyOrder = () => {
-    console.log("Tidy Up Order");
+    const itemIDs = getCurrentOrderIDS();
+    const order = [];
+    for (const id of itemIDs) {
+      const itemsArr = currentOrder.filter((item) => item.id == id);
+      let quantity = 0;
+      for (const item of itemsArr) {
+        quantity += item.quantity;
+      }
+      const newItem = itemsArr[0];
+      newItem.quantity = quantity;
+      order.push(newItem);
+    }
+    if (!tidy) {
+      setTidy(true);
+    }
+    setCurrentOrder([...order]);
   };
 
   const closeOrder = () => {
-    // setPastOrder([...currentOrder]);
     setPastOrder([...currentOrder]);
     console.log(pastOrder);
     setCurrentOrder([]);
@@ -44,7 +89,7 @@ function App() {
   ));
 
   const orderList = currentOrder.map((item, idx) => (
-    <OrderItem key={idx} item={item} deleteItem={() => deleteItem(idx)} />
+    <OrderItem key={idx} item={item} deleteItem={() => deleteItem(item)} />
   ));
 
   // Output

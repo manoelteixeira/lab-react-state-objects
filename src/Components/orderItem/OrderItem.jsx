@@ -3,7 +3,9 @@ export default function OrderItem({ item, deleteItem }) {
     <li>
       <span onClick={deleteItem}>❌</span>
       <span>{item.name}</span>
-      <span>${item.price}</span>
+      <span>
+        {item.quantity > 1 && `${item.quantity} x `}${item.price}
+      </span>
     </li>
   );
 }
